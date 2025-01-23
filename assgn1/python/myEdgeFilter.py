@@ -41,37 +41,33 @@ def myEdgeFilter(img0, sigma):
     # Create output array
     suppressed = np.zeros_like(magnitude)
 
-    # Non max supression 
-    for i in range(1, magnitude.shape[0] + 1):
-        for j in range(1, magnitude.shape[1] + 1):
-            grad_dir = angle[i - 1, j - 1]
-            if grad_dir == 0:  # Horizontal
-                neighbors = [padded_magnitude[i, j + 1], padded_magnitude[i, j - 1]]
-            elif grad_dir == 45:  # Diagonal 
-                neighbors = [padded_magnitude[i - 1, j + 1], padded_magnitude[i + 1, j - 1]]
-            elif grad_dir == 90:  # Vertical
-                neighbors = [padded_magnitude[i + 1, j], padded_magnitude[i - 1, j]]
-            elif grad_dir == 135:  # Diagonal
-                neighbors = [padded_magnitude[i + 1, j + 1], padded_magnitude[i - 1, j - 1]]
-            else:
-                continue
+     # Apply NMS for each angle
+    suppressed[(angle == 0)] = magnitude[(angle == 0)] * (
+        (magnitude[(angle == 0)] >= neighbors_0[0][(angle == 0)]) &
+        (magnitude[(angle == 0)] >= neighbors_0[1][(angle == 0)])
+    )
+    suppressed[(angle == 45)] = magnitude[(angle == 45)] * (
+        (magnitude[(angle == 45)] >= neighbors_45[0][(angle == 45)]) &
+        (magnitude[(angle == 45)] >= neighbors_45[1][(angle == 45)])
+    )
+    suppressed[(angle == 90)] = magnitude[(angle == 90)] * (
+        (magnitude[(angle == 90)] >= neighbors_90[0][(angle == 90)]) &
+        (magnitude[(angle == 90)] >= neighbors_90[1][(angle == 90)])
+    )
+    suppressed[(angle == 135)] = magnitude[(angle == 135)] * (
+        (magnitude[(angle == 135)] >= neighbors_135[0][(angle == 135)]) &
+        (magnitude[(angle == 135)] >= neighbors_135[1][(angle == 135)])
+    )
 
-            # Suppress if not greater than neighbors
-            if magnitude[i - 1, j - 1] >= max(neighbors):
-                suppressed[i - 1, j - 1] = magnitude[i - 1, j - 1]
-            else:
-                suppressed[i - 1, j - 1] = 0
-    # Step 4: Dilation and Erosion to Remove Noise
+    # Step 4: Dilation to Remove Noise
     kernel = np.ones((3, 3), np.uint8)  # Structuring element
-    dilated = cv2.dilate(suppressed, kernel, iterations=1)
-    cleaned = cv2.erode(dilated, kernel, iterations=1)
+    cleaned = cv2.dilate(suppressed, kernel, iterations=1)
 
     # Step 5: Apply Thresholding (Optional, to further reduce noise)
     threshold = 0.1 * cleaned.max()
     cleaned[cleaned < threshold] = 0
 
     return cleaned
-    # return None 
 
 def nonMaxSupression(   ):
 
