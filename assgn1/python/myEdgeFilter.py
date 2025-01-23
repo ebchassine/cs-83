@@ -17,8 +17,12 @@ def myEdgeFilter(img0, sigma):
 
     # print(gaussian_kernel_2d)
     # Compute Gradients
-    sobel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
-    sobel_y = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
+    sobel_x = np.array([[-1, 0, 1], 
+                        [-2, 0, 2], 
+                        [-1, 0, 1]])
+    sobel_y = np.array([[1, 2, 1], 
+                        [0, 0, 0], 
+                        [-1, -2, -1]])
 
     imgx = myImageFilter(smoothed_img, sobel_x)  # Gradient in x-direction
     imgy = myImageFilter(smoothed_img, sobel_y)  # Gradient in y-direction
@@ -29,29 +33,49 @@ def myEdgeFilter(img0, sigma):
     direction[direction < 0] += 180  # Map directions to [0, 180]
 
     #  Non-Maximum Suppression
-    angle = np.round(direction / 45) * 45  # Map to nearest 0, 45, 90, or 135 degrees
+    angle = (np.round(direction / 45) * 45) % 180  # Map to nearest 0, 45, 90, or 135 degrees
 
     # Pad the magnitude array
-    padded_magnitude = np.pad(magnitude, ((1, 1), (1, 1)), mode='constant') #mode=edge?
+    padded_magnitude = np.pad(magnitude, ((1, 1), (1, 1)), mode='constant')
 
-    # Vectorized Non-Maximum Suppression
-    neighbors = {
-        0: (padded_magnitude[1:-1, 2:], padded_magnitude[1:-1, :-2]),
-        45: (padded_magnitude[:-2, 2:], padded_magnitude[2:, :-2]),
-        90: (padded_magnitude[2:, 1:-1], padded_magnitude[:-2, 1:-1]),
-        135: (padded_magnitude[2:, 2:], padded_magnitude[:-2, :-2])
-    }
-
+    # Create output array
     suppressed = np.zeros_like(magnitude)
-    for a in [0, 45, 90, 135]:
-        q, r = neighbors[a]
-        mask = angle == a
-        suppressed[mask] = magnitude[mask] * ((magnitude[mask] >= q[mask]) & (magnitude[mask] >= r[mask]))
 
-    return suppressed
+    # Non max supression 
+    for i in range(1, magnitude.shape[0] + 1):
+        for j in range(1, magnitude.shape[1] + 1):
+            grad_dir = angle[i - 1, j - 1]
+            if grad_dir == 0:  # Horizontal
+                neighbors = [padded_magnitude[i, j + 1], padded_magnitude[i, j - 1]]
+            elif grad_dir == 45:  # Diagonal 
+                neighbors = [padded_magnitude[i - 1, j + 1], padded_magnitude[i + 1, j - 1]]
+            elif grad_dir == 90:  # Vertical
+                neighbors = [padded_magnitude[i + 1, j], padded_magnitude[i - 1, j]]
+            elif grad_dir == 135:  # Diagonal
+                neighbors = [padded_magnitude[i + 1, j + 1], padded_magnitude[i - 1, j - 1]]
+            else:
+                continue
+
+            # Suppress if not greater than neighbors
+            if magnitude[i - 1, j - 1] >= max(neighbors):
+                suppressed[i - 1, j - 1] = magnitude[i - 1, j - 1]
+            else:
+                suppressed[i - 1, j - 1] = 0
+    # Step 4: Dilation and Erosion to Remove Noise
+    kernel = np.ones((3, 3), np.uint8)  # Structuring element
+    dilated = cv2.dilate(suppressed, kernel, iterations=1)
+    cleaned = cv2.erode(dilated, kernel, iterations=1)
+
+    # Step 5: Apply Thresholding (Optional, to further reduce noise)
+    threshold = 0.1 * cleaned.max()
+    cleaned[cleaned < threshold] = 0
+
+    return cleaned
     # return None 
 
-def nms()
+def nonMaxSupression(   ):
+
+    return None 
 
 # def main():
     # Input image path
