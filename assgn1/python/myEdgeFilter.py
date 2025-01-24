@@ -16,7 +16,7 @@ def myEdgeFilter(img0, sigma):
     smoothed_img = myImageFilter(img0, gaussian_kernel_2d)
 
     # print(gaussian_kernel_2d)
-    # Compute Gradients
+    # Compute Gradients w/ Sobel Kernel
     sobel_x = np.array([[-1, 0, 1], 
                         [-2, 0, 2], 
                         [-1, 0, 1]])
@@ -28,46 +28,49 @@ def myEdgeFilter(img0, sigma):
     imgy = myImageFilter(smoothed_img, sobel_y)  # Gradient in y-direction
 
     # Gradient magnitude and direction
-    magnitude = np.hypot(imgx, imgy)  
+    magnitude = np.hypot(imgx, imgy)  # function that replaces sqrt(x^2 + y^2)
     direction = np.arctan2(imgy, imgx) * (180 / np.pi)
-    direction[direction < 0] += 180  # Map directions to [0, 180]
+    direction[direction < 0] += 180  # Map directions to [0, 180] for any negative values (seen by filter)
 
-    #  Non-Maximum Suppression
+    #  Non-Maximum Suppression Part 
     angle = (np.round(direction / 45) * 45) % 180  # Map to nearest 0, 45, 90, or 135 degrees
 
-    # Pad the magnitude array
+    # padding the magnitude array
     padded_magnitude = np.pad(magnitude, ((1, 1), (1, 1)), mode='constant')
 
-    # Create output array
+    # init output array
     suppressed = np.zeros_like(magnitude)
 
-     # Apply NMS for each angle
-    suppressed[(angle == 0)] = magnitude[(angle == 0)] * (
-        (magnitude[(angle == 0)] >= neighbors_0[0][(angle == 0)]) &
-        (magnitude[(angle == 0)] >= neighbors_0[1][(angle == 0)])
-    )
-    suppressed[(angle == 45)] = magnitude[(angle == 45)] * (
-        (magnitude[(angle == 45)] >= neighbors_45[0][(angle == 45)]) &
-        (magnitude[(angle == 45)] >= neighbors_45[1][(angle == 45)])
-    )
-    suppressed[(angle == 90)] = magnitude[(angle == 90)] * (
-        (magnitude[(angle == 90)] >= neighbors_90[0][(angle == 90)]) &
-        (magnitude[(angle == 90)] >= neighbors_90[1][(angle == 90)])
-    )
-    suppressed[(angle == 135)] = magnitude[(angle == 135)] * (
-        (magnitude[(angle == 135)] >= neighbors_135[0][(angle == 135)]) &
-        (magnitude[(angle == 135)] >= neighbors_135[1][(angle == 135)])
-    )
+    # Non max supression 
+    for i in range(1, magnitude.shape[0] + 1): 
+        for j in range(1, magnitude.shape[1] + 1):
+            grad_dir = angle[i - 1, j - 1]
+            if grad_dir == 0:  # Horizontal
+                neighbors = [padded_magnitude[i, j + 1], padded_magnitude[i, j - 1]]
+            elif grad_dir == 45:  # Diagonal 
+                neighbors = [padded_magnitude[i - 1, j + 1], padded_magnitude[i + 1, j - 1]]
+            elif grad_dir == 90:  # Vertical
+                neighbors = [padded_magnitude[i + 1, j], padded_magnitude[i - 1, j]]
+            elif grad_dir == 135:  # Diagonal
+                neighbors = [padded_magnitude[i + 1, j + 1], padded_magnitude[i - 1, j - 1]]
+            else:
+                continue
 
-    # Step 4: Dilation to Remove Noise
+            if magnitude[i - 1, j - 1] >= max(neighbors):
+                suppressed[i - 1, j - 1] = magnitude[i - 1, j - 1]
+            else:
+                suppressed[i - 1, j - 1] = 0
+    # Dilation and Erosion to Remove Noise
     kernel = np.ones((3, 3), np.uint8)  # Structuring element
-    cleaned = cv2.dilate(suppressed, kernel, iterations=1)
+    dilated = cv2.dilate(suppressed, kernel, iterations=1) # as per the instructions 
+    cleaned = cv2.erode(dilated, kernel, iterations=1) # I found that this thinned the lines back to a similar thickness that was done by the dilation
 
-    # Step 5: Apply Thresholding (Optional, to further reduce noise)
+    # Apply Thresholding (Optional, to further reduce noise)
     threshold = 0.1 * cleaned.max()
     cleaned[cleaned < threshold] = 0
 
     return cleaned
+    # return None 
 
 def nonMaxSupression(   ):
 
