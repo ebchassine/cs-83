@@ -4,13 +4,14 @@ from scipy.signal.windows import gaussian
 from scipy.ndimage import sobel, convolve
 import cv2
 import os 
+from myImageFilter import myImageFilter
 
-def myImageFilter(img0, h):
-    return convolve(img0, h, mode='constant', cval=0.0)
+# def myImageFilter(img0, h):
+#     return convolve(img0, h, mode='constant', cval=0.0)
 
 def myEdgeFilter(img0, sigma):
     # Gaussian Filter w/myImageFilter
-    hsize = 2 * int(np.ceil(3 * sigma)) + 1  # Size of the Gaussian filter
+    hsize = 2 * (np.ceil(3 * sigma)) + 1  # Size of the Gaussian filter
     gaussian_kernel = gaussian(hsize, std=sigma).reshape(-1, 1)
     gaussian_kernel_2d = gaussian_kernel @ gaussian_kernel.T
     smoothed_img = myImageFilter(img0, gaussian_kernel_2d)
@@ -60,21 +61,17 @@ def myEdgeFilter(img0, sigma):
                 suppressed[i - 1, j - 1] = magnitude[i - 1, j - 1]
             else:
                 suppressed[i - 1, j - 1] = 0
+    # return suppressed
     # Dilation and Erosion to Remove Noise
-    kernel = np.ones((3, 3), np.uint8)  # Structuring element
+    kernel = np.ones((3, 3), np.uint8)  # Structuring kernel (the larger the kernel, the larger of area of consideration for dilation), I found 2x2 was sweetspot 
     dilated = cv2.dilate(suppressed, kernel, iterations=1) # as per the instructions 
     cleaned = cv2.erode(dilated, kernel, iterations=1) # I found that this thinned the lines back to a similar thickness that was done by the dilation
 
     # Apply Thresholding (Optional, to further reduce noise)
-    threshold = 0.1 * cleaned.max()
+    threshold = 0.05 * cleaned.max()
     cleaned[cleaned < threshold] = 0
 
     return cleaned
-    # return None 
-
-def nonMaxSupression(   ):
-
-    return None 
 
 # def main():
     # Input image path
