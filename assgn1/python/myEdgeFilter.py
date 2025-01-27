@@ -67,7 +67,6 @@ def myEdgeFilter(img0, sigma):
     kernel = np.ones((3, 3), np.uint8)  # Structuring kernel (the larger the kernel, the larger of area of consideration for dilation), I found 2x2 was sweetspot 
     dilated = cv2.dilate(suppressed, kernel, iterations=1) # as per the instructions 
     cleaned = cv2.erode(dilated, kernel, iterations=1) # I found that this thinned the lines back to a similar thickness that was done by the dilation
-
     # Apply Thresholding (Optional, to further reduce noise)
     threshold = 0.05 * cleaned.max()
     cleaned[cleaned < threshold] = 0
@@ -123,7 +122,7 @@ img0 = img0.astype(np.float64)
 nms_image = myEdgeFilter(img0, 3)
 # cv2.imshow("NMS Image", nms_image)
 # cv2.waitKey(0)
-cv2.imwrite('../results/img01_TEST_OUTPUT.jpg', nms_image)
+cv2.imwrite('../results/img01_cleaned.jpg', nms_image)
 
 # Record end time
 end_time = time.time()

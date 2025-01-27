@@ -4,8 +4,6 @@ import cv2  # For cv2.dilate function
 # img_hough (np.ndarray): The Hough transform accumulator (2D array).
 # nLines (int): The number of lines to 
 def myHoughLines(img_hough, nLines):
-
-    
     normalized_hough = img_hough / np.max(img_hough)
     kernel = np.ones((3, 3), dtype=np.uint8)
     local_max = cv2.dilate(normalized_hough, kernel)  # dilate the accumulator to find local maxima as per instrucitons 

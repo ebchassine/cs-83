@@ -22,7 +22,6 @@ def myImageFilter(img0, h):
         padded_img.strides[1],  # Kernel column stride
     )
     sliding_windows = as_strided(padded_img, shape=output_shape, strides=strides)
-
     # multiply kernel with sliding windows and summing, refer to blog sources 
     img1 = np.einsum('ijkl,kl->ij', sliding_windows, h)
 
