@@ -18,7 +18,8 @@ def plotMatches(im1,im2,matches,locs1,locs2):
 	im1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
 	im2 = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
 	plt.axis('off')
-	skimage.feature.plot_matches(ax,im1,im2,locs1,locs2,matches,matches_color='r',only_matches=True)
+	# skimage.feature.plot_matches(ax,im1,im2,locs1,locs2,matches,matches_color='r',only_matches=True)
+	skimage.feature.plot_matched_features(image0 = im1, image1 = im2, keypoints0 = locs1, keypoints1 = locs2, matches = matches, ax = ax, matches_color='r', only_matches=True)
 	plt.show()
 	return
 
