@@ -13,16 +13,11 @@ img = cv2.imread(image_path)
 histo = [] 
 
 for i in range(36):
-	#Rotate Image
 	theta = i * 10
 	rotated_image =	 scipy.ndimage.rotate(img, theta) 
-	#Compute features, descriptors and Match features
 	matches, _, _ = matchPics(img, rotated_image)
-	#Update histogram
 	histo.append(len(matches))
-	
-print(len(histo))
-	
+
 # Display histogram
 plt.figure(figsize=(8, 5))
 plt.bar([angle for angle in range(0, 360, 10)], histo, width=8, color='b')
