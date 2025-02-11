@@ -1,19 +1,17 @@
 import numpy as np
 import cv2
 from matchPics import matchPics
-import random
+# import random # used for debugging 
 
 def computeH(x1, x2):
 	#Compute the homography between two sets of points
 	assert x1.shape == x2.shape, "Unequal shapes between x1, x2"
 	N = x1.shape[0]
 
-    # Construct the A matrix
 	A = []
 	for i in range(0, N):
 		x_1, y_1 = x1[i] # x' y'
 		x_2, y_2 = x2[i] # x y
-		# Add to A two rows at a time 
 			#		[-x -y, -1, 0, 0, 0, xx', yx', x']
 			#		[0, 0, 0, -x. -y -1. y'x, yy', y']
 		A.append([-x_2, -y_2, -1, 0, 0, 0, x_1*x_2, x_1*y_2, x_1])
@@ -92,38 +90,13 @@ def computeH_ransac(x1, x2):
 
 	return bestH2to1, inliers
 
-# def compositeH(H2to1, template, img):
-# 	h, w = img.shape[:2]
-# 	# H_inv = np.linalg.inv(H2to1)
-# 	H_inv = H2to1
-# 	# SCALING 
-# 	# scale_factor = min(w / template.shape[1], h / template.shape[0])
-# 	# new_size = (int(template.shape[1] * scale_factor), int(template.shape[0] * scale_factor))
-# 	# template_resized = cv2.resize(template, new_size)
-# 	print("SHAPE", H_inv.shape)
-# 	# WARPING 
-# 	warped_template = cv2.warpPerspective(template, H_inv, (w, h))
-
-# 	# BINARY MASK
-# 	mask = np.any(warped_template > 0, axis=-1).astype(np.uint8)
-# 	mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
-
-# 	# Composite 
-# 	composite_img = img.copy()
-# 	composite_img[mask > 0] = warped_template[mask > 0]
-
-# 	return composite_img
-
 def compositeH(H2to1, template, img):
     h, w = img.shape[:2]
-
-    # Normalize homography
-    # H2to1 = H2to1 / H2to1[2, 2]
 
     # Invert homography to map template -> img
     H_inv = np.linalg.inv(H2to1)
 
-    # Resize template while preserving aspect ratio
+    # # Resize template while preserving aspect ratio
     # scale_factor = min(w / template.shape[1], h / template.shape[0])
     # new_size = (int(template.shape[1] * scale_factor), int(template.shape[0] * scale_factor))
     # template_resized = cv2.resize(template, new_size)
@@ -131,63 +104,8 @@ def compositeH(H2to1, template, img):
     # Warp the resized template
     warped_template = cv2.warpPerspective(template, H_inv, (w, h))
 
-    # Create a binary mask for blending
-    # mask = np.any(warped_template > 0, axis=-1).astype(np.uint8)
-    # mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
-
     # Composite the images
     composite_img = img.copy()
     composite_img[warped_template > 0] = warped_template[warped_template > 0]
 
     return composite_img
-
-# def main():
-# 	# random.seed(1)
-# 	# np.set_printoptions(suppress=True)
-
-# 	x1 = np.array([[1, -3], [4, -4], [3, -5], [6, -6], [2, -7], [7, -8], [8, -9], [9, -10]])
-# 	x2 = np.array([[100, -300], [400, -400], [300, -500], [600, -600], [200, -700], [700, -800], [800, -900], [900, -1000]])
-
-# 	# print(computeH(x1, x2))
-
-# 	# print(" ")
-# 	# print(" ")
-# 	# print(" ")
-
-# 	print(computeH_norm(x1, x2))
-
-# def main():
-# 	img = cv2.imread("../data/cv_desk.png")
-# 	template = cv2.imread("../data/cv_cover.jpg")
-
-# 	matches, locs1, locs2 = matchPics(template, img)
-	
-# 	x1 = locs1[matches[:, 0], :][::-1]
-# 	x2 = locs2[matches[:, 1], :][::-1]
-
-# 	print("Testing computeH...")
-# 	H = computeH(x1, x2)
-# 	print("Homography Matrix (H):\n", H)
-
-# 	print("\nTesting computeH_norm...")
-# 	H_norm = computeH_norm(x1, x2)
-# 	print("Normalized Homography Matrix (H_norm):\n", H_norm)
-
-# 	print("\nTesting computeH_ransac...")
-# 	bestH, inliers = computeH_ransac(x1, x2)
-# 	print("BESTH", bestH)
-# 	print("Best Homography Matrix from RANSAC:\n", bestH)
-# 	print("Inliers Mask:\n", inliers)
-
-# 	print("\nTesting compositeH...")
-# 	if img is not None and template is not None:
-# 		composite = compositeH(bestH, template, img)
-# 		cv2.imwrite("./results/composite_test.jpg", composite)
-# 		cv2.imshow("Composite Image", composite)
-# 		cv2.waitKey(0)
-# 		cv2.destroyAllWindows()
-# 	else:
-# 		print("Invalid image files for compositeH test.")
-
-# if __name__ == "__main__":
-# 	main()

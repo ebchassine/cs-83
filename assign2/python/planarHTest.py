@@ -5,20 +5,18 @@ from planarH import computeH, computeH_norm, computeH_ransac, compositeH
 
 def main():
     # Load images
-    img = cv2.imread("./data/cv_desk.png")
-    template = cv2.imread("./data/cv_cover.jpg")
+    img = cv2.imread("../data/cv_desk.png")
+    template = cv2.imread("../data/cv_cover.jpg")
 
     matches, locs1, locs2 = matchPics(template, img)
 
     x1 = locs1[matches[:, 0]]#[::-1]
     x2 = locs2[matches[:, 1]]#[::-1]
 
-    print(x1[:5], x2[:5])
-    # x1[:, [0,1]] = x1[:, [1,0]]
-    # x2[:, [0,1]] = x2[:, [1,0]] 
-    x1 = locs1[matches[:, 0]][::-1]
-    x2 = locs2[matches[:, 1]][::-1]
-    print(x1[:5], x2[:5])
+    x1[:, [0,1]] = x1[:, [1,0]]
+    x2[:, [0,1]] = x2[:, [1,0]] 
+    # x1 = locs1[matches[:, 0]][::-1]
+    # x2 = locs2[matches[:, 1]][::-1]
 
     print("\nTesting computeH...")
     H = computeH(x1, x2)
