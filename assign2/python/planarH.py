@@ -4,8 +4,7 @@ from matchPics import matchPics
 # import random # used for debugging 
 
 def computeH(x1, x2):
-	#Compute the homography between two sets of points
-	assert x1.shape == x2.shape, "Unequal shapes between x1, x2"
+	# assert x1.shape == x2.shape, "Unequal shapes between x1, x2"
 	N = x1.shape[0]
 
 	A = []
@@ -26,11 +25,9 @@ def computeH(x1, x2):
 def computeH_norm(x1, x2):
 	#Q3.7
 	def normalize(coords): # input: homogenous coords, output: normalized coords, T 3x3 matrix
-		#Compute the centroid of the points
 		centroid = np.mean(coords, axis=0)
-		#Shift origin of the points to the centroid
 		shifted = coords - centroid 
-		#Normalize the points so that the largest distance from the origin is equal to sqrt(2)
+
 		normalized = np.max(np.sqrt(np.sum(shifted**2, axis=1)))
 		scale = np.sqrt(2) / normalized if normalized > 0 else 1
 		T = np.array([
@@ -49,9 +46,7 @@ def computeH_norm(x1, x2):
 
 	# print("Normalized x1:\n", x1_norm)
 	# print("Normalized x2:\n", x2_norm)
-	# Compute homography
 	H_norm = computeH(x1_norm, x2_norm)
-
 	H2to1 = H_norm @ T2
 	H2to1 = np.linalg.inv(T1) @ H2to1
 	
@@ -59,7 +54,6 @@ def computeH_norm(x1, x2):
 
 def computeH_ransac(x1, x2):
 	#Q3.8
-	#Compute the best fitting homography given a list of matching points
 	max_inliers = 0
 	bestH2to1 = None
 	inliers = None
@@ -76,10 +70,7 @@ def computeH_ransac(x1, x2):
 		x2_transformed = (H @ x2_homog.T).T
 		x2_transformed /= x2_transformed[:, 2].reshape(-1, 1)  # convert back from homog 
 		distances = np.linalg.norm(x1 - x2_transformed[:, :2], axis=1)
-		# x1_homog = np.column_stack((x1, np.ones(x1.shape[0])))
-		# errors = np.sum((x1_homog - x2_transformed) ** 2, axis=1)  # Compute squared homogeneous errormes
-		
-		# count inliers
+
 		inliers_mask = distances < threshold
 		num_inliers = np.sum(inliers_mask)
 
@@ -92,19 +83,10 @@ def computeH_ransac(x1, x2):
 
 def compositeH(H2to1, template, img):
     h, w = img.shape[:2]
-
-    # Invert homography to map template -> img
     H_inv = np.linalg.inv(H2to1)
 
-    # # Resize template while preserving aspect ratio
-    # scale_factor = min(w / template.shape[1], h / template.shape[0])
-    # new_size = (int(template.shape[1] * scale_factor), int(template.shape[0] * scale_factor))
-    # template_resized = cv2.resize(template, new_size)
-
-    # Warp the resized template
     warped_template = cv2.warpPerspective(template, H_inv, (w, h))
-
-    # Composite the images
+	
     composite_img = img.copy()
     composite_img[warped_template > 0] = warped_template[warped_template > 0]
 

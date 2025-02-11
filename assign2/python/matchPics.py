@@ -17,15 +17,15 @@ def matchPics(I1, I2):
 
 	matches = briefMatch(desc1, desc2, ratio=0.65)
 
-	# plotMatches(I1, I2, matches, locs1, locs2)
 	return matches, locs1, locs2
 
-if __name__ == "__main__":
-    I1 = cv2.imread("../data/cv_cover.jpg") 
-    I2 = cv2.imread("../data/cv_desk.png")
+# this was moved to the matchPicsScript included in the submission 
+# if __name__ == "__main__":
+#     I1 = cv2.imread("../data/cv_cover.jpg") 
+#     I2 = cv2.imread("../data/cv_desk.png")
 
-    try:
-        matches, locs1, locs2 = matchPics(I1, I2)
-        plotMatches(I1, I2, matches, locs1, locs2)
-    except ValueError as e:
-        print(e)
+#     try:
+#         matches, locs1, locs2 = matchPics(I1, I2)
+#         plotMatches(I1, I2, matches, locs1, locs2)
+#     except ValueError as e:
+#         print(e)

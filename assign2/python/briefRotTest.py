@@ -5,10 +5,8 @@ import scipy.ndimage
 import matplotlib.pyplot as plt
 
 #Q3.5
-#Read the image and convert to grayscale, if necessary
-image_path = "./data/cv_cover.jpg"
+image_path = "../data/cv_cover.jpg"
 img = cv2.imread(image_path)
-# img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 histo = [] 
 
