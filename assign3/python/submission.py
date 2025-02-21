@@ -5,6 +5,10 @@ Submission Functions
 
 # import packages here
 
+import helper
+import numpy as np
+import scipy.optimize
+import numpy.linalg as la
 
 """
 Q3.1.1 Eight Point Algorithm
@@ -13,9 +17,82 @@ Q3.1.1 Eight Point Algorithm
            M, scalar value computed as max(H1,W1)
        [O] F, the fundamental matrix (3x3 matrix)
 """
+
+# def eight_point(pts1, pts2, M):
+#     # replace pass by your implementation
+#     # pass
+#     T = np.array([[1/M, 0, -0.5], [0, 1/M, -0.5], [0, 0, 1]])
+#     pts1_h = np.hstack((pts1, np.ones((pts1.shape[0], 1))))
+#     pts2_h = np.hstack((pts2, np.ones((pts2.shape[0], 1))))
+#     pts1_norm = (T @ pts1_h.T).T
+#     pts2_norm = (T @ pts2_h.T).T
+
+#     A = np.zeros((pts1.shape[0], 9))
+#     for i in range(pts1.shape[0]):
+#         x1, y1 = pts1_norm[i, :2]
+#         x2, y2 = pts2_norm[i, :2]
+#         A[i] = [x1*x2, x1*y2, x1, y1*x2, y1*y2, y1, x2, y2, 1]
+
+#     # Compute F using SVD
+#     _, _, V = la.svd(A)
+#     F = V[-1].reshape(3, 3)
+
+#     # Enforce rank 2 constraint
+#     U, S, V = la.svd(F)
+#     S[-1] = 0
+#     F = U @ np.diag(S) @ V
+
+#     # Unnormalize F
+#     F = T.T @ F @ T
+
+#     return F
+
 def eight_point(pts1, pts2, M):
-    # replace pass by your implementation
-    pass
+    # Compute normalization matrices
+    mean1 = np.mean(pts1, axis=0)
+    mean2 = np.mean(pts2, axis=0)
+    
+    std1 = np.sqrt(2) / np.mean(np.linalg.norm(pts1 - mean1, axis=1))
+    std2 = np.sqrt(2) / np.mean(np.linalg.norm(pts2 - mean2, axis=1))
+    
+    T1 = np.array([[std1, 0, -std1 * mean1[0]],
+                    [0, std1, -std1 * mean1[1]],
+                    [0, 0, 1]])
+    
+    T2 = np.array([[std2, 0, -std2 * mean2[0]],
+                    [0, std2, -std2 * mean2[1]],
+                    [0, 0, 1]])
+    
+    # Normalize points
+    pts1_h = np.hstack((pts1, np.ones((pts1.shape[0], 1))))
+    pts2_h = np.hstack((pts2, np.ones((pts2.shape[0], 1))))
+    pts1_norm = (T1 @ pts1_h.T).T
+    pts2_norm = (T2 @ pts2_h.T).T
+    
+    # Construct matrix A
+    A = np.zeros((pts1.shape[0], 9))
+    for i in range(pts1.shape[0]):
+        x1, y1 = pts1_norm[i, :2]
+        x2, y2 = pts2_norm[i, :2]
+        A[i] = [x1*x2, x1*y2, x1, y1*x2, y1*y2, y1, x2, y2, 1]
+    
+    # Compute F using SVD
+    _, _, V = la.svd(A)
+    F = V[-1].reshape(3, 3)
+    
+    # Enforce rank 2 constraint
+    U, S, V = la.svd(F)
+    S[-1] = 0  # Force rank 2
+    F = U @ np.diag(S) @ V
+    
+    # Refine F using provided helper function
+    F = helper.refineF(F, pts1_norm[:, :2], pts2_norm[:, :2])
+    
+    # Unnormalize F
+    F = T2.T @ F @ T1
+    
+    return F
+
 
 
 """
